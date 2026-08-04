@@ -2,11 +2,14 @@
 # ============================================================================
 # XIANMOD TOOL INSTALLER — @XIANMOD
 # ============================================================================
+# Engine.zip akan di-download manual oleh user.
+# ============================================================================
 
 MINT='\e[1;36m'
 MINT2='\e[1;32m'
 DIM='\e[2;36m'
 RED='\e[1;31m'
+YELLOW='\e[1;33m'
 WHITE='\e[1;37m'
 NC='\e[0m'
 
@@ -60,7 +63,8 @@ printf "${MINT}  ┌────────────────────
 printf "${MINT}  │${NC}${WHITE}       Installer  —  @XIANMOD             ${NC}${MINT}│${NC}\n"
 printf "${MINT}  └──────────────────────────────────────────┘${NC}\n"
 printf "\n"
-printf "  ${DIM}Engine → ~/@XIAN TOOL 45/ENGINE/${NC}\n"
+printf "  ${DIM}Engine akan di-download manual oleh user.${NC}\n"
+printf "  ${DIM}Folder ENGINE sudah disiapkan di ~/@XIAN TOOL 45/ENGINE/${NC}\n"
 printf "\n"
 printf "  ${MINT}──────────────────────────────────────────${NC}\n"
 printf "\n"
@@ -72,6 +76,7 @@ run_step "Updating package list"         "pkg update -y"
 run_step "Installing Python"             "pkg install -y python"
 run_step "Installing pip / setuptools"   "pip install --upgrade pip setuptools wheel --quiet"
 run_step "Installing OpenSSL libs"       "pkg install -y openssl libcrypt"
+run_step "Installing lua5.3"             "pkg install -y lua5.3"
 printf "\n"
 
 # ──────────────────────────────────────────────────────────
@@ -86,31 +91,60 @@ run_step "Installing requests"           "pip install requests --quiet"
 printf "\n"
 
 # ──────────────────────────────────────────────────────────
-#  STEP 3 — Directory & Engine
+#  STEP 3 — Directory structure (tanpa download Engine)
 # ──────────────────────────────────────────────────────────
 fake_step "Creating directory structure" 0.3
 mkdir -p "$ENGINE_DEST"
-
-# 🔥 FIX: Download Engine.zip — tanpa background (&)
-run_step "Downloading Engine.zip" \
-    "curl -sL --fail \"$GITHUB_RAW/Engine.zip\" -o /tmp/Engine.zip"
-
-if [ -f "/tmp/Engine.zip" ]; then
-    run_step "Extracting Engine.zip" \
-        "unzip -o /tmp/Engine.zip -d \"$ENGINE_DEST\" && rm -f /tmp/Engine.zip"
-else
-    printf "  ${RED}✗${NC}  ${WHITE}%-40s${NC}${RED} failed — file not found on GitHub${NC}\n" "Engine.zip"
-    printf "  ${DIM}  → Tool tetap bisa jalan, tapi fitur Lua mungkin terbatas.${NC}\n"
-fi
+mkdir -p "$HOME_DIR/PAK" "$HOME_DIR/UNPACK" "$HOME_DIR/REPACK" "$HOME_DIR/RESULT"
+mkdir -p "$HOME_DIR/@XIAN TOOL 45"/{EDIT,UNPACK,RESULT,PAK}
+mkdir -p "$HOME_DIR/@XIAN TOOL 45/LUA TOOL"/{INPUT\ PAK,EXTRACT,LUA\ ORI,SOURCE,COMPILED,EDIT,RESULT}
 printf "\n"
 
 # ──────────────────────────────────────────────────────────
-#  STEP 4 — Binary & Launcher
+#  STEP 4 — Binary
 # ──────────────────────────────────────────────────────────
 run_step "Downloading XIANMOD binary" \
     "curl -sL --fail \"$GITHUB_RAW/XIANMOD\" -o \"$BIN_DEST\""
 
 if [ -f "$BIN_DEST" ]; then
+    run_step "Setting XIANMOD permissions"   "chmod +x \"$BIN_DEST\""
+else
+    printf "  ${RED}✗${NC}  ${WHITE}%-40s${NC}${RED} failed to download binary${NC}\n" "XIANMOD binary"
+    exit 1
+fi
+
+# ──────────────────────────────────────────────────────────
+#  STEP 5 — Launcher
+# ──────────────────────────────────────────────────────────
+fake_step "Creating launcher: $LAUNCHER_NAME" 0.3
+cat > "$PREFIX/bin/$LAUNCHER_NAME" << EOF
+#!/data/data/com.termux/files/usr/bin/bash
+cd "$HOME_DIR"
+./XIANMOD
+EOF
+chmod +x "$PREFIX/bin/$LAUNCHER_NAME"
+
+# ──────────────────────────────────────────────────────────
+#  DONE
+# ──────────────────────────────────────────────────────────
+printf "\n"
+printf "  ${MINT}──────────────────────────────────────────${NC}\n"
+printf "\n"
+printf "  ${MINT2}✅  ${WHITE}Installation complete!${NC}\n"
+printf "\n"
+printf "  ${DIM}Run :${NC}  ${WHITE}$LAUNCHER_NAME${NC}\n"
+printf "  ${DIM}Or  :${NC}  ${WHITE}cd ~ && ./XIANMOD${NC}\n"
+printf "\n"
+printf "  ${YELLOW}📌  ${WHITE}Engine.zip belum di-download.${NC}\n"
+printf "  ${DIM}Untuk mengaktifkan fitur Lua, download Engine.zip dan extract:${NC}\n"
+printf "  ${WHITE}  wget $GITHUB_RAW/Engine.zip${NC}\n"
+printf "  ${WHITE}  unzip Engine.zip -d \"$ENGINE_DEST\"${NC}\n"
+printf "  ${WHITE}  rm Engine.zip${NC}\n"
+printf "\n"
+printf "${MINT}  ┌──────────────────────────────────────────┐${NC}\n"
+printf "${MINT}  │${NC}${DIM}    Telegram : t.me/XIANMOD  |  @XIANMOD  ${NC}${MINT}│${NC}\n"
+printf "${MINT}  └──────────────────────────────────────────┘${NC}\n"
+printf "\n"if [ -f "$BIN_DEST" ]; then
     run_step "Setting XIANMOD permissions"   "chmod +x \"$BIN_DEST\""
 else
     printf "  ${RED}✗${NC}  ${WHITE}%-40s${NC}${RED} failed to download binary${NC}\n" "XIANMOD binary"
