@@ -144,34 +144,4 @@ printf "\n"
 printf "${MINT}  ┌──────────────────────────────────────────┐${NC}\n"
 printf "${MINT}  │${NC}${DIM}    Telegram : t.me/XIANMOD  |  @XIANMOD  ${NC}${MINT}│${NC}\n"
 printf "${MINT}  └──────────────────────────────────────────┘${NC}\n"
-printf "\n"if [ -f "$BIN_DEST" ]; then
-    run_step "Setting XIANMOD permissions"   "chmod +x \"$BIN_DEST\""
-else
-    printf "  ${RED}✗${NC}  ${WHITE}%-40s${NC}${RED} failed to download binary${NC}\n" "XIANMOD binary"
-    exit 1
-fi
-
-# Create launcher
-fake_step "Creating launcher: $LAUNCHER_NAME" 0.3
-cat > "$PREFIX/bin/$LAUNCHER_NAME" << EOF
-#!/data/data/com.termux/files/usr/bin/bash
-cd "$HOME_DIR"
-./XIANMOD
-EOF
-chmod +x "$PREFIX/bin/$LAUNCHER_NAME"
-
-# ──────────────────────────────────────────────────────────
-#  DONE
-# ──────────────────────────────────────────────────────────
-printf "\n"
-printf "  ${MINT}──────────────────────────────────────────${NC}\n"
-printf "\n"
-printf "  ${MINT2}✅  ${WHITE}Installation complete!${NC}\n"
-printf "\n"
-printf "  ${DIM}Run :${NC}  ${WHITE}$LAUNCHER_NAME${NC}\n"
-printf "  ${DIM}Or  :${NC}  ${WHITE}cd ~ && ./XIANMOD${NC}\n"
-printf "\n"
-printf "${MINT}  ┌──────────────────────────────────────────┐${NC}\n"
-printf "${MINT}  │${NC}${DIM}    Telegram : t.me/XIANMOD  |  @XIANMOD  ${NC}${MINT}│${NC}\n"
-printf "${MINT}  └──────────────────────────────────────────┘${NC}\n"
 printf "\n"
