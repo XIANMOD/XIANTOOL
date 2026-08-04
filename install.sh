@@ -23,14 +23,8 @@ FI=0
 run_step() {
     local label="$1"; shift
     printf "  ${MINT}${FRAMES[0]}${NC}  ${WHITE}%-40s${NC}" "$label"
-    eval "$@" >/dev/null 2>&1 &
-    local pid=$!
-    while kill -0 "$pid" 2>/dev/null; do
-        FI=$(( (FI+1) % 10 ))
-        printf "\r  ${MINT}${FRAMES[$FI]}${NC}  ${WHITE}%-40s${NC}" "$label"
-        sleep 0.08
-    done
-    wait "$pid"; local code=$?
+    eval "$@" >/dev/null 2>&1
+    local code=$?
     if [ $code -eq 0 ]; then
         printf "\r  ${MINT2}✓${NC}  ${WHITE}%-40s${NC}${DIM} done${NC}\n" "$label"
     else
@@ -42,14 +36,7 @@ run_step() {
 fake_step() {
     local label="$1" delay="${2:-0.3}"
     printf "  ${MINT}${FRAMES[0]}${NC}  ${WHITE}%-40s${NC}" "$label"
-    sleep "$delay" &
-    local pid=$!
-    while kill -0 "$pid" 2>/dev/null; do
-        FI=$(( (FI+1) % 10 ))
-        printf "\r  ${MINT}${FRAMES[$FI]}${NC}  ${WHITE}%-40s${NC}" "$label"
-        sleep 0.08
-    done
-    wait "$pid"
+    sleep "$delay"
     printf "\r  ${MINT2}✓${NC}  ${WHITE}%-40s${NC}${DIM} done${NC}\n" "$label"
 }
 
@@ -104,9 +91,9 @@ printf "\n"
 fake_step "Creating directory structure" 0.3
 mkdir -p "$ENGINE_DEST"
 
-# Download Engine.zip
+# 🔥 FIX: Download Engine.zip — tanpa background (&)
 run_step "Downloading Engine.zip" \
-    "curl -sL \"$GITHUB_RAW/Engine.zip\" -o /tmp/Engine.zip"
+    "curl -sL --fail \"$GITHUB_RAW/Engine.zip\" -o /tmp/Engine.zip"
 
 if [ -f "/tmp/Engine.zip" ]; then
     run_step "Extracting Engine.zip" \
@@ -121,7 +108,7 @@ printf "\n"
 #  STEP 4 — Binary & Launcher
 # ──────────────────────────────────────────────────────────
 run_step "Downloading XIANMOD binary" \
-    "curl -sL \"$GITHUB_RAW/XIANMOD\" -o \"$BIN_DEST\""
+    "curl -sL --fail \"$GITHUB_RAW/XIANMOD\" -o \"$BIN_DEST\""
 
 if [ -f "$BIN_DEST" ]; then
     run_step "Setting XIANMOD permissions"   "chmod +x \"$BIN_DEST\""
@@ -149,54 +136,6 @@ printf "  ${MINT2}✅  ${WHITE}Installation complete!${NC}\n"
 printf "\n"
 printf "  ${DIM}Run :${NC}  ${WHITE}$LAUNCHER_NAME${NC}\n"
 printf "  ${DIM}Or  :${NC}  ${WHITE}cd ~ && ./XIANMOD${NC}\n"
-printf "\n"
-printf "${MINT}  ┌──────────────────────────────────────────┐${NC}\n"
-printf "${MINT}  │${NC}${DIM}    Telegram : t.me/XIANMOD  |  @XIANMOD  ${NC}${MINT}│${NC}\n"
-printf "${MINT}  └──────────────────────────────────────────┘${NC}\n"
-printf "\n"run_step "Installing pytz"              "pip install pytz --quiet"
-run_step "Installing requests"           "pip install requests --quiet"
-printf "\n"
-
-# ─────────────────────────────────────────────────────────────
-#  ENGINE FILES
-# ─────────────────────────────────────────────────────────────
-fake_step "Creating directory structure" 0.3
-mkdir -p "$ENGINE_DEST"
-
-# Download Engine.zip kalau tidak ada lokal
-if [ ! -f "$ENGINE_ZIP" ]; then
-    run_step "Downloading Engine.zip" \
-        "curl -sL \"$GITHUB_RAW/Engine.zip\" -o \"$ENGINE_ZIP\""
-fi
-
-if [ -f "$ENGINE_ZIP" ]; then
-    run_step "Extracting Engine.zip" \
-        "unzip -o \"$ENGINE_ZIP\" -d \"$ENGINE_DEST\""
-else
-    printf "  ${RED}✗${NC}  ${WHITE}%-40s${NC}${RED} not found after download${NC}\n" "Engine.zip"
-fi
-
-# ─────────────────────────────────────────────────────────────
-#  BINARY
-# ─────────────────────────────────────────────────────────────
-if [ ! -f "$BINARY" ]; then
-    run_step "Downloading XIANMOD binary" \
-        "curl -sL \"$GITHUB_RAW/XIANMOD\" -o \"$HOME/XIANMOD\""
-    BINARY="$HOME/XIANMOD"
-fi
-
-run_step "Setting XIANMOD permissions"   "chmod +x \"$BINARY\""
-fake_step "Finalizing setup"             0.5
-
-# ─────────────────────────────────────────────────────────────
-#  DONE
-# ─────────────────────────────────────────────────────────────
-printf "\n"
-printf "  ${MINT}──────────────────────────────────────────${NC}\n"
-printf "\n"
-printf "  ${MINT2}✅  ${WHITE}Installation complete!${NC}\n"
-printf "\n"
-printf "  ${DIM}Run :${NC}  ${WHITE}$BINARY${NC}\n"
 printf "\n"
 printf "${MINT}  ┌──────────────────────────────────────────┐${NC}\n"
 printf "${MINT}  │${NC}${DIM}    Telegram : t.me/XIANMOD  |  @XIANMOD  ${NC}${MINT}│${NC}\n"
