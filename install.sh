@@ -10,9 +10,21 @@ G='\033[1;32m'
 Y='\033[1;33m'
 B='\033[1;34m'
 C='\033[1;36m'
-M='\033[1;35m'
 W='\033[1;37m'
 NC='\033[0m'
+
+# Animasi loading
+spinner() {
+    local pid=$1
+    local spin='◐◓◑◒'
+    while kill -0 $pid 2>/dev/null; do
+        for i in $(seq 0 3); do
+            printf "\r[%c] " "${spin:$i:1}"
+            sleep 0.1
+        done
+    done
+    printf "\r[✓] "
+}
 
 clear
 echo -e "${C}"
@@ -27,189 +39,106 @@ echo " ╚═══════════════════════�
 echo -e "${Y}               INSTALLER - BY @XIANMOD${NC}"
 echo
 
-# ============================================================================
-# CHECK TERMUX
-# ============================================================================
-
+# Cek Termux
 if [ -z "$PREFIX" ]; then
-    echo -e "${R}[!] This script is for Termux only!${NC}"
+    echo -e "${R}[✗] Script ini khusus Termux!${NC}"
     exit 1
 fi
 
-echo -e "${B}[✓] Termux detected${NC}"
-echo
-
 # ============================================================================
-# GITHUB REPO
+# INSTALL
 # ============================================================================
 
-REPO_USER="XIANMOD"
-REPO_NAME="XIANTOOL"
-RAW_URL="https://raw.githubusercontent.com/$REPO_USER/$REPO_NAME/main"
+echo -e "${B}[1/4] Menginstall dependencies...${NC}"
+
+# System packages
+{
+    pkg update -y >/dev/null 2>&1
+    pkg install -y python clang binutils zip git wget curl openjdk-17 lua5.3 >/dev/null 2>&1
+} &
+spinner $!
+echo -e "${G}System packages ✓${NC}"
+
+# Python packages
+{
+    pip install --upgrade pip >/dev/null 2>&1
+    pip install rich pycryptodome zstandard gmalg requests colorama pytz cython >/dev/null 2>&1
+} &
+spinner $!
+echo -e "${G}Python packages ✓${NC}"
 
 # ============================================================================
-# INSTALL SYSTEM PACKAGES
+# DOWNLOAD BINARY
 # ============================================================================
 
-echo -e "${B}[1/6] Installing system packages...${NC}"
-echo
-
-packages=("python" "clang" "binutils" "zip" "git" "wget" "curl" "python-dev" "openjdk-17" "lua5.3")
-
-for pkg in "${packages[@]}"; do
-    if ! command -v $pkg &> /dev/null 2>&1; then
-        echo -e "${Y}  > Installing $pkg...${NC}"
-        pkg install $pkg -y 2>/dev/null || true
-    else
-        echo -e "${G}  ✓ $pkg already installed${NC}"
-    fi
-done
-
-echo -e "${G}✅ System packages installed!${NC}"
-
-# ============================================================================
-# INSTALL PYTHON PACKAGES
-# ============================================================================
-
-echo
-echo -e "${B}[2/6] Installing Python packages...${NC}"
-echo
-
-# Upgrade pip
-echo -e "${Y}  > Upgrading pip...${NC}"
-pip install --upgrade pip 2>/dev/null || true
-
-# Install required packages
-python_packages=(
-    "rich"
-    "pycryptodome"
-    "zstandard"
-    "gmalg"
-    "requests"
-    "colorama"
-    "pytz"
-    "cython"
-)
-
-for pkg in "${python_packages[@]}"; do
-    echo -e "${Y}  > Installing $pkg...${NC}"
-    pip install $pkg 2>/dev/null || {
-        echo -e "${R}  ✗ Failed to install $pkg${NC}"
-    }
-done
-
-echo -e "${G}✅ Python packages installed!${NC}"
-
-# ============================================================================
-# DOWNLOAD MAIN BINARY
-# ============================================================================
-
-echo
-echo -e "${B}[3/6] Downloading XIANMOD binary...${NC}"
-
-# Create folder
+echo -e "${B}[2/4] Downloading XIANMOD...${NC}"
 mkdir -p "$HOME/XIANMOD"
 cd "$HOME/XIANMOD"
 
-# Download binary XIANMOD
-echo -e "${Y}  > Downloading XIANMOD...${NC}"
-wget -q "$RAW_URL/XIANMOD" -O XIANMOD 2>/dev/null || {
-    curl -sSL "$RAW_URL/XIANMOD" -o XIANMOD 2>/dev/null || {
-        echo -e "${R}[!] Binary download failed!${NC}"
-        exit 1
-    }
-}
+{
+    curl -sSL "https://raw.githubusercontent.com/XIANMOD/XIANTOOL/main/XIANMOD" -o XIANMOD
+} &
+spinner $!
 
-chmod +x XIANMOD
-
-if [ ! -f "XIANMOD" ]; then
-    echo -e "${R}[!] XIANMOD binary not found!${NC}"
+if [ -f "XIANMOD" ]; then
+    chmod +x XIANMOD
+    echo -e "${G}XIANMOD binary ✓${NC}"
+else
+    echo -e "${R}[✗] Gagal download XIANMOD!${NC}"
     exit 1
 fi
 
-echo -e "${G}✅ XIANMOD binary downloaded!${NC}"
-
 # ============================================================================
-# DOWNLOAD ENGINE.ZIP
+# DOWNLOAD & EXTRACT ENGINE.ZIP
 # ============================================================================
 
-echo
-echo -e "${B}[4/6] Downloading Engine.zip...${NC}"
+echo -e "${B}[3/4] Downloading Engine.zip...${NC}"
 
 ENGINE_DIR="$HOME/XIANMOD/@XIAN TOOL 45/ENGINE"
 mkdir -p "$ENGINE_DIR"
 
-echo -e "${Y}  > Downloading Engine.zip...${NC}"
-wget -q "$RAW_URL/Engine.zip" -O /tmp/Engine.zip 2>/dev/null || {
-    curl -sSL "$RAW_URL/Engine.zip" -o /tmp/Engine.zip 2>/dev/null || {
-        echo -e "${R}[!] Engine.zip download failed!${NC}"
-        exit 1
-    }
-}
+{
+    curl -sSL "https://raw.githubusercontent.com/XIANMOD/XIANTOOL/main/Engine.zip" -o /tmp/Engine.zip
+} &
+spinner $!
 
 if [ -f "/tmp/Engine.zip" ]; then
-    echo -e "${Y}  > Extracting Engine.zip...${NC}"
-    unzip -o /tmp/Engine.zip -d "$ENGINE_DIR" 2>/dev/null || {
-        echo -e "${R}[!] Failed to extract Engine.zip${NC}"
-        exit 1
-    }
-    rm -f /tmp/Engine.zip
-    echo -e "${G}✅ Engine.zip extracted to $ENGINE_DIR${NC}"
-    
-    # Show contents
-    echo -e "${Y}  > Engine contents:${NC}"
-    ls -la "$ENGINE_DIR" | grep -v "^d" | awk '{print "    " $9}' | head -10
+    echo -e "${B}  Extracting Engine.zip...${NC}"
+    {
+        unzip -o /tmp/Engine.zip -d "$ENGINE_DIR" >/dev/null 2>&1
+        rm -f /tmp/Engine.zip
+    } &
+    spinner $!
+    echo -e "${G}Engine.zip extracted ✓${NC}"
 else
-    echo -e "${R}[!] Engine.zip not found!${NC}"
-    exit 1
+    echo -e "${Y}[!] Engine.zip tidak ditemukan di GitHub!${NC}"
+    echo -e "${Y}    Pastikan file Engine.zip sudah diupload.${NC}"
+    echo -e "${Y}    Installasi tetap lanjut tanpa Engine.${NC}"
 fi
 
 # ============================================================================
-# CREATE DIRECTORY STRUCTURE
+# CREATE DIRECTORIES
 # ============================================================================
 
-echo
-echo -e "${B}[5/6] Creating directory structure...${NC}"
-
-cd "$HOME/XIANMOD"
-
-# Main directories
-mkdir -p PAK UNPACK REPACK RESULT
-
-# @XIAN TOOL 45 directories
-mkdir -p "@XIAN TOOL 45"/{EDIT,UNPACK,RESULT,PAK,ENGINE}
-
-# LUA TOOL directories
-mkdir -p "@XIAN TOOL 45"/LUA\ TOOL/{INPUT\ PAK,EXTRACT,LUA\ ORI,SOURCE,COMPILED,EDIT,RESULT}
-
-echo -e "${G}✅ Directory structure created!${NC}"
+echo -e "${B}[4/4] Membuat folder...${NC}"
+{
+    mkdir -p PAK UNPACK REPACK RESULT
+    mkdir -p "@XIAN TOOL 45"/{EDIT,UNPACK,RESULT,PAK,ENGINE}
+    mkdir -p "@XIAN TOOL 45"/LUA\ TOOL/{INPUT\ PAK,EXTRACT,LUA\ ORI,SOURCE,COMPILED,EDIT,RESULT}
+} &
+spinner $!
+echo -e "${G}Folder structure ✓${NC}"
 
 # ============================================================================
-# CREATE LAUNCHER
+# LAUNCHER
 # ============================================================================
 
-echo
-echo -e "${B}[6/6] Creating launcher...${NC}"
-
-# Launcher untuk binary
 cat > "$PREFIX/bin/xianmod" << 'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
 cd ~/XIANMOD
 ./XIANMOD
 EOF
-
 chmod +x "$PREFIX/bin/xianmod"
-
-# Launcher alternatif di folder
-cat > "$HOME/XIANMOD/run.sh" << 'EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-cd ~/XIANMOD
-./XIANMOD
-EOF
-
-chmod +x "$HOME/XIANMOD/run.sh"
-
-echo -e "${G}✅ Launcher created: 'xianmod'${NC}"
 
 # ============================================================================
 # FINAL
@@ -217,38 +146,15 @@ echo -e "${G}✅ Launcher created: 'xianmod'${NC}"
 
 echo
 echo -e "${G}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${G}║               INSTALLATION COMPLETE!                       ║${NC}"
+echo -e "${G}║               INSTALLASI SELESAI! 🎉                      ║${NC}"
 echo -e "${G}╚═════════════════════════════════════════════════════════════╝${NC}"
 echo
-echo -e "${C}🚀 Cara menjalankan:${NC}"
+echo -e "${C}🚀 Jalankan:${NC}"
 echo -e "${W}  xianmod${NC}"
-echo -e "${W}  atau cd ~/XIANMOD && ./XIANMOD${NC}"
 echo
 echo -e "${C}📁 Lokasi:${NC}"
-echo -e "${W}  ~/XIANMOD/XIANMOD  (Binary)${NC}"
-echo -e "${W}  ~/XIANMOD/@XIAN TOOL 45/ENGINE/  (Engine tools)${NC}"
-echo
-echo -e "${C}📦 Isi Engine:${NC}"
-if [ -d "$ENGINE_DIR" ]; then
-    for file in "$ENGINE_DIR"/*; do
-        if [ -f "$file" ]; then
-            echo -e "${W}  • $(basename "$file")${NC}"
-        fi
-    done
-fi
-echo
-echo -e "${C}📁 Struktur Folder:${NC}"
-echo -e "${W}  ~/XIANMOD/${NC}"
-echo -e "${W}    ├── XIANMOD        (Binary utama)${NC}"
-echo -e "${W}    ├── PAK/           (Input PAK)${NC}"
-echo -e "${W}    ├── UNPACK/        (Hasil unpack)${NC}"
-echo -e "${W}    ├── REPACK/        (File repack)${NC}"
-echo -e "${W}    ├── RESULT/        (Hasil repack)${NC}"
-echo -e "${W}    └── @XIAN TOOL 45/${NC}"
-echo -e "${W}         ├── ENGINE/   (unluac, luac, lua5.3)${NC}"
-echo -e "${W}         └── LUA TOOL/ (Lua decompile/recompile)${NC}"
+echo -e "${W}  ~/XIANMOD/XIANMOD${NC}"
 echo
 echo -e "${G}=============================================================${NC}"
 echo -e "${G}  MOD BY @XIANMOD${NC}"
 echo -e "${G}=============================================================${NC}"
-echo
