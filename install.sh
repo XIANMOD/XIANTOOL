@@ -2,8 +2,6 @@
 # ============================================================================
 # XIANMOD TOOL INSTALLER — @XIANMOD
 # ============================================================================
-# Engine.zip akan di-download manual oleh user.
-# ============================================================================
 
 MINT='\e[1;36m'
 MINT2='\e[1;32m'
@@ -63,20 +61,18 @@ printf "${MINT}  ┌────────────────────
 printf "${MINT}  │${NC}${WHITE}       Installer  —  @XIANMOD             ${NC}${MINT}│${NC}\n"
 printf "${MINT}  └──────────────────────────────────────────┘${NC}\n"
 printf "\n"
-printf "  ${DIM}Engine akan di-download manual oleh user.${NC}\n"
-printf "  ${DIM}Folder ENGINE sudah disiapkan di ~/@XIAN TOOL 45/ENGINE/${NC}\n"
+printf "  ${DIM}Engine akan di-download manual. Folder ENGINE sudah disiapkan.${NC}\n"
 printf "\n"
 printf "  ${MINT}──────────────────────────────────────────${NC}\n"
 printf "\n"
 
 # ──────────────────────────────────────────────────────────
-#  STEP 1 — System packages
+#  STEP 1 — System packages (tanpa lua5.3)
 # ──────────────────────────────────────────────────────────
 run_step "Updating package list"         "pkg update -y"
 run_step "Installing Python"             "pkg install -y python"
 run_step "Installing pip / setuptools"   "pip install --upgrade pip setuptools wheel --quiet"
 run_step "Installing OpenSSL libs"       "pkg install -y openssl libcrypt"
-run_step "Installing lua5.3"             "pkg install -y lua5.3"
 printf "\n"
 
 # ──────────────────────────────────────────────────────────
@@ -91,7 +87,7 @@ run_step "Installing requests"           "pip install requests --quiet"
 printf "\n"
 
 # ──────────────────────────────────────────────────────────
-#  STEP 3 — Directory structure (tanpa download Engine)
+#  STEP 3 — Directory structure
 # ──────────────────────────────────────────────────────────
 fake_step "Creating directory structure" 0.3
 mkdir -p "$ENGINE_DEST"
@@ -111,6 +107,39 @@ if [ -f "$BIN_DEST" ]; then
 else
     printf "  ${RED}✗${NC}  ${WHITE}%-40s${NC}${RED} failed to download binary${NC}\n" "XIANMOD binary"
     exit 1
+fi
+
+# ──────────────────────────────────────────────────────────
+#  STEP 5 — Launcher
+# ──────────────────────────────────────────────────────────
+fake_step "Creating launcher: $LAUNCHER_NAME" 0.3
+cat > "$PREFIX/bin/$LAUNCHER_NAME" << EOF
+#!/data/data/com.termux/files/usr/bin/bash
+cd "$HOME_DIR"
+./XIANMOD
+EOF
+chmod +x "$PREFIX/bin/$LAUNCHER_NAME"
+
+# ──────────────────────────────────────────────────────────
+#  DONE
+# ──────────────────────────────────────────────────────────
+printf "\n"
+printf "  ${MINT}──────────────────────────────────────────${NC}\n"
+printf "\n"
+printf "  ${MINT2}✅  ${WHITE}Installation complete!${NC}\n"
+printf "\n"
+printf "  ${DIM}Run :${NC}  ${WHITE}$LAUNCHER_NAME${NC}\n"
+printf "  ${DIM}Or  :${NC}  ${WHITE}cd ~ && ./XIANMOD${NC}\n"
+printf "\n"
+printf "  ${YELLOW}📌  ${WHITE}DOWNLOAD ENGINE.ZIP (untuk fitur Lua):${NC}\n"
+printf "  ${WHITE}  wget $GITHUB_RAW/Engine.zip${NC}\n"
+printf "  ${WHITE}  unzip Engine.zip -d \"$ENGINE_DEST\"${NC}\n"
+printf "  ${WHITE}  rm Engine.zip${NC}\n"
+printf "\n"
+printf "${MINT}  ┌──────────────────────────────────────────┐${NC}\n"
+printf "${MINT}  │${NC}${DIM}    Telegram : t.me/XIANMOD  |  @XIANMOD  ${NC}${MINT}│${NC}\n"
+printf "${MINT}  └──────────────────────────────────────────┘${NC}\n"
+printf "\n"    exit 1
 fi
 
 # ──────────────────────────────────────────────────────────
